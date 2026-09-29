@@ -1,18 +1,150 @@
 <!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Sudoku Game</title>
-  <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-  <h1>Sudoku Game</h1>
-  <div id="sudoku-board"></div>
-  <div class="controls">
-    <button id="new-game">New Game</button>
-    <button id="check-solution">Check Solution</button>
-    <span id="message"></span>
-  </div>
-  <script src="/static/main.js"></script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sudoku Game</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <p class="eyebrow">Local puzzle</p>
+          <h1>Sudoku <span>by Sri</span></h1>
+        </div>
+        <div class="toolbar">
+          <label for="difficulty-select" class="sr-only">Select difficulty</label>
+          <select id="difficulty-select" aria-label="Select puzzle difficulty" class="difficulty-select">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+            <option value="expert">Expert</option>
+          </select>
+          <button id="theme-toggle" type="button" class="secondary theme-switch" role="switch" aria-label="Dark mode" aria-checked="false">
+            <span class="theme-switch-label theme-light-label">Light</span>
+            <span class="theme-switch-track" aria-hidden="true"><span class="theme-switch-thumb"></span></span>
+            <span class="theme-switch-label theme-dark-label">Dark</span>
+          </button>
+          <button id="new-game" type="button">New Game</button>
+          <div id="message" class="message" role="status" aria-live="polite" hidden>
+            <span id="message-text"></span>
+            <button id="message-dismiss" class="message-dismiss" type="button" aria-label="Dismiss message">&times;</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="game-layout" aria-label="Sudoku game">
+        <aside class="status-bar" aria-label="Puzzle session">
+          <div class="panel-heading">
+            <span class="panel-kicker">Session</span>
+            <span class="panel-mark">9 x 9</span>
+          </div>
+          <div class="session-metrics" aria-live="polite">
+            <div class="timer-wrap">
+              <span class="label">Timer</span>
+              <strong id="timer">00:00</strong>
+            </div>
+            <div class="hint-wrap">
+              <span class="label">Hints</span>
+              <strong id="hint-count">0</strong>
+            </div>
+          </div>
+          <div class="progress-block">
+            <div class="progress-heading">
+              <span class="label">Cells filled</span>
+              <strong id="entry-progress-text">0 / 0</strong>
+            </div>
+            <progress id="entry-progress" max="1" value="0" aria-label="Puzzle completion"></progress>
+          </div>
+          <button id="leaderboard-open" type="button" class="secondary">Leaderboard</button>
+        </aside>
+
+        <div id="sudoku-board" class="sudoku-board" role="grid" aria-label="Sudoku board"></div>
+
+        <aside class="tools-panel" aria-label="Game tools">
+          <div class="panel-heading">
+            <span class="panel-kicker">Play tools</span>
+            <span class="panel-mark">01</span>
+          </div>
+          <div class="controls" aria-label="Game actions">
+            <button id="undo-action" type="button" class="secondary" title="Ctrl+z" aria-label="Undo last move" disabled>Undo</button>
+            <button id="redo-action" type="button" class="secondary" title="Ctrl+y" aria-label="Redo last move" disabled>Redo</button>
+            <div id="hint-control" class="hint-control">
+              <button id="hint-solution" type="button" class="secondary hint-main" disabled>Hint</button>
+              <button id="hint-options-toggle" type="button" class="secondary hint-toggle" aria-label="Hint direction options" aria-expanded="false" aria-controls="hint-options-menu" disabled>&#9662;</button>
+              <div id="hint-options-menu" class="hint-menu" role="group" aria-label="Hint direction" hidden>
+                <fieldset class="hint-direction-group">
+                  <legend>Horizontal</legend>
+                  <label><input type="radio" name="horizontal-direction" value="left" checked>Left</label>
+                  <label><input type="radio" name="horizontal-direction" value="right">Right</label>
+                </fieldset>
+                <fieldset class="hint-direction-group">
+                  <legend>Vertical</legend>
+                  <label><input type="radio" name="vertical-direction" value="top" checked>Top</label>
+                  <label><input type="radio" name="vertical-direction" value="bottom">Bottom</label>
+                </fieldset>
+                <fieldset class="hint-direction-group">
+                  <legend>Flow</legend>
+                  <label><input type="radio" name="hint-flow" value="vertical">Vertical</label>
+                  <label><input type="radio" name="hint-flow" value="horizontal" checked>Horizontal</label>
+                </fieldset>
+              </div>
+            </div>
+            <button id="clear-board" type="button" class="secondary" disabled>Clear</button>
+            <button id="reset-game" type="button" class="secondary" aria-label="Restart current puzzle" >Restart</button>
+            <button id="check-solution" type="button">Check</button>
+          </div>
+          <div id="board-feedback" class="board-feedback" role="status" aria-live="polite" data-state="clear">
+            <span class="feedback-dot" aria-hidden="true"></span>
+            <div>
+              <span class="label">Board check</span>
+              <strong id="board-feedback-text">No conflicts</strong>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <dialog id="leaderboard-dialog" class="scoreboard" aria-labelledby="leaderboard-title">
+        <div class="scoreboard-heading">
+          <h2 id="leaderboard-title">Leaderboard</h2>
+          <span>Top 10</span>
+          <button id="leaderboard-close" type="button" class="secondary" aria-label="Close leaderboard">Close</button>
+        </div>
+        <div class="score-table-wrap">
+          <table class="score-table">
+            <thead>
+              <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Name</th>
+                <th scope="col">Difficulty</th>
+                <th scope="col">Time</th>
+                <th scope="col">Hints</th>
+              </tr>
+            </thead>
+            <tbody id="top-scores"></tbody>
+          </table>
+        </div>
+      </dialog>
+
+      <dialog id="score-entry-dialog" class="score-entry-dialog" aria-labelledby="score-entry-title">
+        <div class="score-entry-heading">
+          <span class="panel-kicker">Puzzle complete</span>
+          <span id="score-entry-difficulty" class="panel-mark"></span>
+        </div>
+        <h2 id="score-entry-title">Save your score</h2>
+        <p id="score-entry-summary" class="score-entry-summary"></p>
+        <form id="score-entry-form" class="score-entry-form">
+          <label for="score-entry-name">Your name</label>
+          <input id="score-entry-name" name="player-name" type="text" maxlength="24" autocomplete="nickname" placeholder="Player" aria-describedby="score-entry-summary" required autofocus>
+          <div class="score-entry-actions">
+            <button id="score-entry-cancel" type="button" class="secondary">Not now</button>
+            <button type="submit">Save score</button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+
+    <script src="/static/main.js"></script>
+  </body>
 </html>
