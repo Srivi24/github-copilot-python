@@ -56,7 +56,9 @@ def reset_game():
 
 @app.route("/check", methods=["POST"])
 def check_solution():
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid check request."}), 400
     board = data.get("board")
     solution = CURRENT.get("solution")
     if not sudoku_logic.is_valid_board_shape(board):
@@ -88,6 +90,9 @@ def hint():
         return jsonify({"error": "Invalid hint request."}), 400
 
     board = CURRENT["puzzle"]
+    player_board = data.get("board")
+    if player_board is not None and not sudoku_logic.is_valid_board_shape(player_board):
+        return jsonify({"error": "Invalid board shape."}), 400
     if "row" in data or "col" in data:
         row = data.get("row")
         col = data.get("col")
@@ -100,6 +105,8 @@ def hint():
             return jsonify({"error": "Invalid hint cell."}), 400
         if board[row][col] != 0:
             return jsonify({"error": "The selected cell is not available for a hint."}), 400
+        if player_board is not None and player_board[row][col] != 0:
+            return jsonify({"error": "Hints can only fill an empty cell."}), 400
         cells = [(row, col)]
     else:
         cells = [

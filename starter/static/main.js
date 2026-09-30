@@ -301,7 +301,8 @@ function redoMove() {
 }
 
 function findNextHintInput() {
-  const inputs = Array.from(document.querySelectorAll('.sudoku-cell:not([readonly])'));
+  const inputs = Array.from(document.querySelectorAll('.sudoku-cell:not([readonly])'))
+    .filter((input) => !input.value.trim());
   inputs.sort((first, second) => {
     const firstRow = Number(first.dataset.row);
     const firstCol = Number(first.dataset.col);
@@ -548,7 +549,9 @@ async function requestHint() {
     clearCellSelection();
     focusedInput = null;
   }
-  const targetInput = focusedInput || findNextHintInput();
+  const targetInput = focusedInput && !focusedInput.value.trim()
+    ? focusedInput
+    : findNextHintInput();
   if (!targetInput) {
     hintsRemaining = 0;
     updateActionAvailability();
@@ -562,9 +565,12 @@ async function requestHint() {
     body: JSON.stringify({
       row: Number(targetInput.dataset.row),
       col: Number(targetInput.dataset.col),
+      board: readBoardFromUI(),
     }),
   };
   hintRequestInProgress = true;
+  targetInput.readOnly = true;
+  let hintApplied = false;
   updateActionAvailability();
   try {
     const response = await fetch('/hint', requestOptions);
@@ -590,13 +596,16 @@ async function requestHint() {
       input.classList.remove('incorrect');
       input.classList.add('prefilled');
       input.classList.add('hinted');
+      input.classList.remove('non-fixed');
       checkLiveConflicts(input);
+      hintApplied = true;
       if (input.classList.contains('is-focused')) clearCellSelection();
     }
     setMessage(data.message, true);
   } catch {
     setMessage('Could not retrieve a hint. Please try again.', false);
   } finally {
+    if (!hintApplied) targetInput.readOnly = false;
     hintRequestInProgress = false;
     updateActionAvailability();
   }

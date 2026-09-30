@@ -65,8 +65,8 @@ body[data-theme='dark'] {
   --success: #636665;
   --shadow: rgba(0, 0, 0, 0.24);
   --board-border: #81978d;
-  --cell-border: rgba(194, 217, 205, 0.14);
-  --box-border: rgba(194, 217, 205, 0.46);
+  --cell-border: rgba(206, 232, 218, 0.403);
+  --box-border: rgba(194, 217, 205, 0.697);
   --selection-accent: #a4dfc1;
   --selection-cell: #2d5545;
   --selection-peer: #33465a;
