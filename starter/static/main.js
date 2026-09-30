@@ -66,6 +66,9 @@ function setMessage(text, isSuccess = false) {
     return;
   }
 
+  if (typeof el.hidePopover === 'function' && el.matches(':popover-open')) {
+    el.hidePopover();
+  }
   const activeElement = document.activeElement;
   messageReturnFocus = activeElement instanceof HTMLElement && !el.contains(activeElement)
     ? activeElement
@@ -470,7 +473,7 @@ function openScoreEntry() {
   const minutes = String(Math.floor(timer / 60)).padStart(2, '0');
   const seconds = String(timer % 60).padStart(2, '0');
   document.getElementById('score-entry-difficulty').textContent = `${difficulty[0].toUpperCase()}${difficulty.slice(1)}`;
-  document.getElementById('score-entry-summary').textContent = `${minutes}:${seconds} | ${hintCount} ${hintCount === 1 ? 'hint' : 'hints'}`;
+  document.getElementById('score-entry-summary').textContent = `Congratulations! You solved it in ${timer} seconds. ${minutes}:${seconds} | ${hintCount} ${hintCount === 1 ? 'hint' : 'hints'}`;
   document.getElementById('score-entry-name').value = '';
   document.getElementById('score-entry-dialog').showModal();
 }
@@ -534,7 +537,6 @@ async function checkSolution() {
 
   if (data.solved) {
     clearInterval(timerId);
-    setMessage(`Congratulations! You solved it in ${timer} seconds.`, true);
     openScoreEntry();
   } else {
     setMessage(data.message || 'Some cells are incorrect.', false);
